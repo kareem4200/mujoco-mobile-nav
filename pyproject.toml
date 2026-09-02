@@ -1,0 +1,25 @@
+[project]
+name = "mujoco-mobile-nav"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kareem Mohamed",email = "kareemmagdy420@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy (<2.5)",
+    "gymnasium (>=1.3.0,<2.0.0)",
+    "mediapy (>=1.2.7,<2.0.0)",
+    "mujoco (>=3.12.0,<4.0.0)",
+    "torch (>=2.14.0,<3.0.0)",
+    "stable-baselines3 (>=2.9.0,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "mujoco_mobile_nav", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
