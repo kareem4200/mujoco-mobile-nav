@@ -11,7 +11,7 @@ class MobileNavEnv(gym.Env):
         self.model = mj.MjModel.from_xml_path(model_path)
         self.data = mj.MjData(self.model)
         
-        # x, y, z, qw, qx, qy, qz, v, w
+        # x, y, z, qw, qx, qy, qz, left_wheel_angle, right_wheel_angle
         self.initial_state = np.array([0.0, 
                                        0.0, 
                                        0.03, 
@@ -31,11 +31,16 @@ class MobileNavEnv(gym.Env):
         
         # observation space (x, y, theta, target_x, target_y)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32)
-        # pass
+        
+        self.max_episode_steps = 1000
+        self.current_step = 0
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
+        # reset step counter
+        self.current_step = 0
+
         # Reset robot
         mj.mj_resetData(self.model, self.data)
         
@@ -61,7 +66,8 @@ class MobileNavEnv(gym.Env):
     def step(self, action):
         self.data.ctrl[:] = action
         mj.mj_step(self.model, self.data)
-        
+        self.current_step += 1
+
         rot = np.zeros(9)
         mj.mju_quat2Mat(rot, self.data.qpos[3:7])
         theta = np.arctan2(rot[3], rot[0])
@@ -75,8 +81,12 @@ class MobileNavEnv(gym.Env):
         distance_to_target = np.linalg.norm(obs[:2] - obs[3:5])
         reward = -distance_to_target
         terminated = distance_to_target < self.target_threshold
-        truncated = False
-        info = {}
+        truncated = self.current_step >= self.max_episode_steps
+        info = {
+            "distance_to_target": distance_to_target,
+            "current_step": self.current_step,
+            "is_success": terminated
+        }
         
         return obs, reward, terminated, truncated, info
 
