@@ -2,7 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import mujoco as mj
 import numpy as np
-
+from scipy.spatial.transform import Rotation
 
 class MobileNavEnv(gym.Env):
 
@@ -44,16 +44,24 @@ class MobileNavEnv(gym.Env):
         # Reset robot
         mj.mj_resetData(self.model, self.data)
         
-        # Set initial state
-        self.data.qpos[:] = self.initial_state
+        # randomize initial state
+        self.data.qpos[:2] = self.np_random.uniform(-1.0, 1.0, dtype=np.float32)
+        random_theta = self.np_random.uniform(-np.pi, np.pi)
+        theta_quat = Rotation.from_euler('z', random_theta).as_quat()
+        self.data.qpos[3:7] = theta_quat
         self.data.qvel[:] = 0.0
+        
+        # randomize target position
+        self.initial_target = np.array([self.np_random.uniform(-5, 5), self.np_random.uniform(-5, 5)], dtype=np.float32)
         
         mj.mj_forward(self.model, self.data)
         
         # return observation
-        rot = np.zeros(9)
-        mj.mju_quat2Mat(rot, self.data.qpos[3:7])
-        theta = np.arctan2(rot[3], rot[0])
+        # rot = np.zeros(9)
+        # mj.mju_quat2Mat(rot, self.data.qpos[3:7])
+        # theta = np.arctan2(rot[3], rot[0])
+        
+        theta = Rotation.from_quat(self.data.qpos[3:7]).as_euler('xyz')[2]
         
         obs = np.array([self.data.qpos[0], 
                         self.data.qpos[1], 
@@ -68,9 +76,10 @@ class MobileNavEnv(gym.Env):
         mj.mj_step(self.model, self.data)
         self.current_step += 1
 
-        rot = np.zeros(9)
-        mj.mju_quat2Mat(rot, self.data.qpos[3:7])
-        theta = np.arctan2(rot[3], rot[0])
+        # rot = np.zeros(9)
+        # mj.mju_quat2Mat(rot, self.data.qpos[3:7])
+        # theta = np.arctan2(rot[3], rot[0])
+        theta = Rotation.from_quat(self.data.qpos[3:7]).as_euler('xyz')[2]
         
         obs = np.array([self.data.qpos[0], 
                         self.data.qpos[1], 
