@@ -1,15 +1,22 @@
 import gymnasium as gym
 from gymnasium import spaces
 import mujoco as mj
+import mujoco.viewer
 import numpy as np
 from scipy.spatial.transform import Rotation
+import time
 
 class MobileNavEnv(gym.Env):
 
-    def __init__(self, model_path):
+    def __init__(self, model_path, render_mode=None):
+        
         # MuJoCo model
         self.model = mj.MjModel.from_xml_path(model_path)
         self.data = mj.MjData(self.model)
+        
+        # render mode
+        self.render_mode = render_mode
+        self.viewer = None
         
         # x, y, z, qw, qx, qy, qz, left_wheel_angle, right_wheel_angle
         self.initial_state = np.array([0.0, 
@@ -32,7 +39,7 @@ class MobileNavEnv(gym.Env):
         # observation space (x, y, theta, target_x, target_y)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(5,), dtype=np.float32)
         
-        self.max_episode_steps = 1000
+        self.max_episode_steps = 100
         self.current_step = 0
 
     def reset(self, seed=None, options=None):
@@ -100,21 +107,42 @@ class MobileNavEnv(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def render(self):
-        pass
+        if self.render_mode != "human":
+            return
+
+        if self.viewer is None:
+            self.viewer = mj.viewer.launch_passive(
+                self.model,
+                self.data,
+            )
+
+        if self.viewer.is_running():
+            with self.viewer.lock():
+                # self.viewer.render()
+                self.viewer.sync()
+            # self.viewer.sync()
+            
+        time.sleep(0.01)  # slow down the rendering for better visualization
     
 if __name__ == "__main__":
-    env = MobileNavEnv("models/car.xml")
+    env = MobileNavEnv("models/car.xml", render_mode="human")
 
     obs, info = env.reset()
     
     print("Initial Observation:", obs)
     
-    for _ in range(1000):
+    for step in range(env.max_episode_steps):
         # action = env.action_space.sample()
         action = np.array([1.0, 0.0], dtype=np.float32)
         obs, reward, terminated, truncated, info = env.step(action)
-        print("Action:", action)
-        print("Observation:", obs, "Reward:", reward)
+        env.render()
+        
+        if step % 10 == 0:
+            print(f"Step: {step}, Reward: {reward}, Distance to Target: {info['distance_to_target']}")
+        # print("Action:", action)
+        # print("Observation:", obs, "Reward:", reward)
         
         if terminated or truncated:
             break
+        
+    env.close()
