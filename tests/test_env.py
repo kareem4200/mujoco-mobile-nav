@@ -1,7 +1,7 @@
 import numpy as np
 from gymnasium.utils.env_checker import check_env
 
-from mujoco_mobile_nav.envs.mobile_nav_env_0 import MobileNavEnv
+from mujoco_mobile_nav.envs.mobile_nav_env import MobileNavEnv
 
 
 def test_environment():
