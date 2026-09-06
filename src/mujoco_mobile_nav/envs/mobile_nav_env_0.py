@@ -45,14 +45,14 @@ class MobileNavEnv(gym.Env):
         mj.mj_resetData(self.model, self.data)
         
         # randomize initial state
-        self.data.qpos[:2] = self.np_random.uniform(-1.0, 1.0, dtype=np.float32)
+        self.data.qpos[:2] = self.np_random.uniform(-1.0, 1.0, size=2) 
         random_theta = self.np_random.uniform(-np.pi, np.pi)
-        theta_quat = Rotation.from_euler('z', random_theta).as_quat()
+        theta_quat = Rotation.from_euler('z', random_theta).as_quat(scalar_first=True)
         self.data.qpos[3:7] = theta_quat
         self.data.qvel[:] = 0.0
         
         # randomize target position
-        self.initial_target = np.array([self.np_random.uniform(-5, 5), self.np_random.uniform(-5, 5)], dtype=np.float32)
+        self.initial_target = np.array([self.np_random.uniform(-3, 3), self.np_random.uniform(-3, 3)], dtype=np.float32)
         
         mj.mj_forward(self.model, self.data)
         
@@ -79,7 +79,7 @@ class MobileNavEnv(gym.Env):
         # rot = np.zeros(9)
         # mj.mju_quat2Mat(rot, self.data.qpos[3:7])
         # theta = np.arctan2(rot[3], rot[0])
-        theta = Rotation.from_quat(self.data.qpos[3:7]).as_euler('xyz')[2]
+        theta = Rotation.from_quat(self.data.qpos[3:7], scalar_first=True).as_euler('xyz')[2]
         
         obs = np.array([self.data.qpos[0], 
                         self.data.qpos[1], 
