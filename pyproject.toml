@@ -13,7 +13,8 @@ dependencies = [
     "mediapy (>=1.2.7,<2.0.0)",
     "mujoco (>=3.12.0,<4.0.0)",
     "torch (>=2.14.0,<3.0.0)",
-    "stable-baselines3 (>=2.9.0,<3.0.0)"
+    "stable-baselines3 (>=2.9.0,<3.0.0)",
+    "scipy (<1.18)"
 ]
 
 [tool.poetry]
